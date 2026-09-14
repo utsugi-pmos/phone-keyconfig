@@ -1,21 +1,39 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 //
 // The power menu phone-keyconfig draws itself, because Plasma Mobile's logout
-// greeter does not render on this shell. A full-screen dimmed overlay with a
-// card of big touch targets; tapping outside, Cancel, or the power/back key
-// closes it. Launched as `phone-keyconfig --power-menu`.
+// greeter does not render on this shell -- and neither does an ordinary window,
+// which the mobile shell will not raise over the running app. So this is a
+// LAYER-SHELL overlay, the same mechanism screenglaze's sheet uses: the
+// compositor puts it on top of everything, panel and task switcher included,
+// and it never becomes an entry in the task bar. Launched as
+// `phone-keyconfig --power-menu`; main.cpp turns on the layer-shell integration
+// before QGuiApplication for exactly this window.
 import QtQuick
 import QtQuick.Controls as Controls
 import QtQuick.Layouts
-import QtQuick.Window
 import org.kde.kirigami as Kirigami
+import org.kde.layershell as LayerShell
 
 Window {
     id: root
-    visibility: Window.FullScreen
-    flags: Qt.Window | Qt.FramelessWindowHint
+    visible: true
     color: "transparent"
-    title: "Power"
+    flags: Qt.FramelessWindowHint
+
+    // Cover the whole output and sit above everything.
+    LayerShell.Window.layer: LayerShell.Window.LayerOverlay
+    LayerShell.Window.anchors: LayerShell.Window.AnchorTop
+        | LayerShell.Window.AnchorBottom
+        | LayerShell.Window.AnchorLeft
+        | LayerShell.Window.AnchorRight
+    LayerShell.Window.exclusionZone: -1
+    LayerShell.Window.keyboardInteractivity: LayerShell.Window.KeyboardInteractivityOnDemand
+    LayerShell.Window.scope: "phone-keyconfig"
+
+    // A size for the fallback case where layer-shell is off; with it on the
+    // compositor overrides both.
+    width: Screen.width
+    height: Screen.height
 
     // Close on Escape / the back gesture.
     Shortcut {
@@ -35,7 +53,7 @@ Window {
 
     Control {
         anchors.centerIn: parent
-        width: Math.min(parent.width - Kirigami.Units.gridUnit * 3, Kirigami.Units.gridUnit * 22)
+        width: Math.min(root.width - Kirigami.Units.gridUnit * 3, Kirigami.Units.gridUnit * 22)
         padding: Kirigami.Units.largeSpacing
         background: Rectangle {
             radius: Kirigami.Units.cornerRadius > 0 ? Kirigami.Units.cornerRadius : 12

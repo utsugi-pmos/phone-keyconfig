@@ -16,6 +16,18 @@
 
 int main(int argc, char *argv[])
 {
+	// Scanned from raw argv, because it decides a thing that must be set BEFORE
+	// QGuiApplication (which is when the Wayland plugin picks its shell
+	// integration): the power menu is a layer-shell overlay so the mobile shell
+	// puts it on TOP of the running app -- an ordinary window is not raised and
+	// never appears. The settings window stays an ordinary window.
+	bool powerMenu = false;
+	for (int i = 1; i < argc; ++i)
+		if (qstrcmp(argv[i], "--power-menu") == 0)
+			powerMenu = true;
+	if (powerMenu && qEnvironmentVariableIsEmpty("PHONE_KEYCONFIG_NO_LAYER_SHELL"))
+		qputenv("QT_WAYLAND_SHELL_INTEGRATION", "layer-shell");
+
 	// Wayland on this phone reports the wrong physical DPI, and Kirigami sizes
 	// every touch target from it; left alone the rows come out too small to hit.
 	// Same workaround as the other apps of the distribution.
@@ -31,8 +43,6 @@ int main(int argc, char *argv[])
 	// every icon in the app is an empty square.
 	if (QIcon::themeName().isEmpty())
 		QIcon::setThemeName(QStringLiteral("breeze"));
-
-	const bool powerMenu = QCoreApplication::arguments().contains(QStringLiteral("--power-menu"));
 
 	QQmlApplicationEngine engine;
 	QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app,
