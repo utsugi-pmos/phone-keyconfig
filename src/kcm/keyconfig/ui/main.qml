@@ -31,10 +31,10 @@ KCM.SimpleKCM {
             id: bindingRow
             Controls.ItemDelegate {
                 id: d
-                required property string title
+                property string title: ""
                 property string subtitle: ""
-                required property string slot
-                property string current: root.backend.library.nameOf(root.backend.binding(slot))
+                property string slot: ""
+                property string current: slot.length ? root.backend.library.nameOf(root.backend.binding(slot)) : ""
                 Layout.fillWidth: true
                 Connections {
                     target: root.backend

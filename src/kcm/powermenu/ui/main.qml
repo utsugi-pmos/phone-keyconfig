@@ -41,16 +41,17 @@ KCM.ScrollViewKCM {
         delegate: Controls.ItemDelegate {
             id: d
             width: ListView.view.width
-            // model.* rather than "required property", because a role named
-            // icon or enabled would shadow ItemDelegate's own FINAL properties.
-            required property int index
+            // No "required property": a role named icon or enabled would shadow
+            // ItemDelegate's own FINAL properties, and any required property
+            // would also turn off the model/index context objects we use here.
+            readonly property int idx: index
 
             contentItem: RowLayout {
                 spacing: Kirigami.Units.smallSpacing
                 ColumnLayout {
                     spacing: 0
-                    Controls.ToolButton { icon.name: "arrow-up"; enabled: d.index > 0; onClicked: root.menu.move(d.index, d.index - 1); implicitHeight: Kirigami.Units.gridUnit * 1.2 }
-                    Controls.ToolButton { icon.name: "arrow-down"; enabled: d.index < list.count - 1; onClicked: root.menu.move(d.index, d.index + 1); implicitHeight: Kirigami.Units.gridUnit * 1.2 }
+                    Controls.ToolButton { icon.name: "arrow-up"; enabled: d.idx > 0; onClicked: root.menu.move(d.idx, d.idx - 1); implicitHeight: Kirigami.Units.gridUnit * 1.2 }
+                    Controls.ToolButton { icon.name: "arrow-down"; enabled: d.idx < list.count - 1; onClicked: root.menu.move(d.idx, d.idx + 1); implicitHeight: Kirigami.Units.gridUnit * 1.2 }
                 }
                 Kirigami.Icon { source: model.icon; Layout.preferredWidth: Kirigami.Units.iconSizes.medium; Layout.preferredHeight: Kirigami.Units.iconSizes.medium; opacity: model.enabled ? 1 : 0.4 }
                 ColumnLayout {
@@ -62,11 +63,11 @@ KCM.ScrollViewKCM {
                 Controls.ToolButton {
                     visible: model.removable
                     icon.name: "edit-delete-symbolic"
-                    onClicked: root.menu.remove(d.index)
+                    onClicked: root.menu.remove(d.idx)
                 }
                 Controls.Switch {
                     checked: model.enabled
-                    onToggled: root.menu.setEnabled(d.index, checked)
+                    onToggled: root.menu.setEnabled(d.idx, checked)
                 }
             }
         }
