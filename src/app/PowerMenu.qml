@@ -51,7 +51,7 @@ Window {
         }
     }
 
-    Control {
+    Controls.Control {
         anchors.centerIn: parent
         width: Math.min(root.width - Kirigami.Units.gridUnit * 3, Kirigami.Units.gridUnit * 22)
         padding: Kirigami.Units.largeSpacing
