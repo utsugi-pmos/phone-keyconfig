@@ -49,7 +49,7 @@ Window {
         }
         contentItem: ColumnLayout {
             spacing: Kirigami.Units.largeSpacing
-            Kirigami.Heading { text: i18n("Power"); level: 1; Layout.alignment: Qt.AlignHCenter }
+            Kirigami.Heading { text: "Power"; level: 1; Layout.alignment: Qt.AlignHCenter }
 
             // Grid
             GridLayout {
