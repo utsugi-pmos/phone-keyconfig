@@ -1,0 +1,20 @@
+{
+    "KPlugin": {
+        "Category": "Hardware",
+        "Description": "The buttons on the power-button menu",
+        "Description[es]": "Los botones del menú del botón de encendido",
+        "FormFactors": [
+            "handset",
+            "tablet"
+        ],
+        "Icon": "system-shutdown-symbolic",
+        "License": "GPL-2.0-or-later",
+        "Name": "Power menu",
+        "Name[es]": "Menú de apagado",
+        "Website": "https://github.com/utsugi-pmos/phone-keyconfig"
+    },
+    "X-KDE-Keywords": "power,menu,shutdown,restart,lock,button,actions",
+    "X-KDE-Keywords[es]": "apagado,menú,reiniciar,bloquear,botón,acciones",
+    "X-KDE-System-Settings-Parent-Category": "hardware",
+    "X-KDE-Weight": 31
+}

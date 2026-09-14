@@ -39,12 +39,15 @@ Values Settings::load()
 	v.timing.forgivenessMs = s.value(QStringLiteral("volume_forgiveness_ms"), 150).toLongLong();
 	s.endGroup();
 
+	// A binding value is an ACTION ID now (resolved through ActionLibrary), not
+	// an inline spec: a built-in id like "screenshot", a custom id like
+	// "custom-1", or "none".
 	s.beginGroup(QStringLiteral("bindings"));
-	v.powerRelease = s.value(QLatin1String(slot::PowerRelease), QStringLiteral("builtin:screen-toggle")).toString();
-	v.powerHold = s.value(QLatin1String(slot::PowerHold), QStringLiteral("builtin:power-menu")).toString();
-	v.powerVolumeUp = s.value(QLatin1String(slot::PowerVolumeUp), QStringLiteral("builtin:brightness-up")).toString();
-	v.powerVolumeDown = s.value(QLatin1String(slot::PowerVolumeDown), QStringLiteral("builtin:screenshot")).toString();
-	v.doubleTap = s.value(QLatin1String(slot::DoubleTap), QStringLiteral("builtin:torch-toggle")).toString();
+	v.powerRelease = s.value(QLatin1String(slot::PowerRelease), QStringLiteral("screen-toggle")).toString();
+	v.powerHold = s.value(QLatin1String(slot::PowerHold), QStringLiteral("power-menu")).toString();
+	v.powerVolumeUp = s.value(QLatin1String(slot::PowerVolumeUp), QStringLiteral("brightness-up")).toString();
+	v.powerVolumeDown = s.value(QLatin1String(slot::PowerVolumeDown), QStringLiteral("screenshot")).toString();
+	v.doubleTap = s.value(QLatin1String(slot::DoubleTap), QStringLiteral("torch-toggle")).toString();
 	s.endGroup();
 
 	s.beginGroup(QStringLiteral("hardware"));

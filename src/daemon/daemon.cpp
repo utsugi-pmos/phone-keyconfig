@@ -11,7 +11,7 @@ namespace keyconfig {
 
 Daemon::Daemon(QObject *parent)
 	: QObject(parent)
-	, m_actions(&m_keys)
+	, m_runner(&m_library)
 {
 	m_clock.start();
 
@@ -48,9 +48,10 @@ void Daemon::watchConfig()
 
 void Daemon::reload()
 {
+	m_library.load();
 	m_cfg = Settings::load();
 	m_gesture.setConfig(m_cfg.timing);
-	m_actions.setHardware(m_cfg.torchLed, m_cfg.torchBrightness, m_cfg.brightnessStepPercent);
+	m_runner.setHardware(m_cfg.torchLed, m_cfg.torchBrightness, m_cfg.brightnessStepPercent);
 	qInfo("phone-keyconfig: config: hold %lld ms, double tap %lld ms, forgiveness %lld ms;"
 		" power+up=%s power+down=%s double=%s release=%s hold=%s",
 		(long long)m_cfg.timing.holdMenuMs, (long long)m_cfg.timing.doubleTapMs,
@@ -58,6 +59,14 @@ void Daemon::reload()
 		qPrintable(m_cfg.powerVolumeUp), qPrintable(m_cfg.powerVolumeDown),
 		qPrintable(m_cfg.doubleTap), qPrintable(m_cfg.powerRelease), qPrintable(m_cfg.powerHold));
 	arm();
+}
+
+// Run a bound action by id. screen-toggle is the one the runner cannot do (it
+// needs a uinput power tap), so the daemon does that itself.
+void Daemon::runBinding(const QString &actionId)
+{
+	if (!m_runner.runById(actionId))
+		m_keys.replayPowerTap();   // builtin:screen-toggle
 }
 
 void Daemon::onPower(int value)
@@ -101,21 +110,21 @@ void Daemon::execute(const std::vector<Action> &actions)
 		switch (a.kind) {
 		case Action::ScreenToggle:
 			qInfo("phone-keyconfig: power released -> %s", qPrintable(m_cfg.powerRelease));
-			m_actions.run(m_cfg.powerRelease);
+			runBinding(m_cfg.powerRelease);
 			break;
 		case Action::PowerMenu:
 			qInfo("phone-keyconfig: power held -> %s", qPrintable(m_cfg.powerHold));
-			m_actions.run(m_cfg.powerHold);
+			runBinding(m_cfg.powerHold);
 			break;
 		case Action::VolumeCombo: {
 			const QString &b = a.volume == Volume::Up ? m_cfg.powerVolumeUp : m_cfg.powerVolumeDown;
 			qInfo("phone-keyconfig: power + volume-%s -> %s", a.volume == Volume::Up ? "up" : "down", qPrintable(b));
-			m_actions.run(b);
+			runBinding(b);
 			break;
 		}
 		case Action::DoubleTap:
 			qInfo("phone-keyconfig: power double tap -> %s", qPrintable(m_cfg.doubleTap));
-			m_actions.run(m_cfg.doubleTap);
+			runBinding(m_cfg.doubleTap);
 			break;
 		case Action::PassVolume:
 			m_keys.replayVolume(a.volume, a.value);

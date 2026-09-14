@@ -1,0 +1,20 @@
+{
+    "KPlugin": {
+        "Category": "Hardware",
+        "Description": "What the power and volume buttons do",
+        "Description[es]": "Qué hacen los botones de encendido y volumen",
+        "FormFactors": [
+            "handset",
+            "tablet"
+        ],
+        "Icon": "input-keyboard-symbolic",
+        "License": "GPL-2.0-or-later",
+        "Name": "Phone keys",
+        "Name[es]": "Botones del teléfono",
+        "Website": "https://github.com/utsugi-pmos/phone-keyconfig"
+    },
+    "X-KDE-Keywords": "power,volume,button,key,gesture,screenshot,flashlight,brightness,double tap",
+    "X-KDE-Keywords[es]": "encendido,volumen,botón,tecla,gesto,captura,linterna,brillo,doble toque",
+    "X-KDE-System-Settings-Parent-Category": "hardware",
+    "X-KDE-Weight": 30
+}

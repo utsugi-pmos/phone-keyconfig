@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "actions.h"
+#include "runaction.h"
 
+#include "actionlibrary.h"
 #include "actionspec.h"
-#include "keys.h"
 
 #include <QDBusConnection>
 #include <QDBusInterface>
 #include <QDBusMessage>
-#include <QDBusReply>
+#include <QDBusPendingCall>
 #include <QDebug>
 #include <QFile>
 #include <QProcess>
@@ -15,44 +15,72 @@
 #include <QSettings>
 #include <QStandardPaths>
 #include <QStringList>
+#include <QVariant>
 
 namespace keyconfig {
 
-Actions::Actions(Keys *keys, QObject *parent)
+namespace {
+
+void sessionCall(const QString &service, const QString &path, const QString &iface, const QString &method)
+{
+	QDBusMessage m = QDBusMessage::createMethodCall(service, path, iface, method);
+	QDBusConnection::sessionBus().asyncCall(m);
+}
+
+} // namespace
+
+ActionRunner::ActionRunner(ActionLibrary *library, QObject *parent)
 	: QObject(parent)
-	, m_keys(keys)
+	, m_library(library)
 {
 }
 
-void Actions::setHardware(const QString &torchLed, int torchBrightness, int brightnessStepPercent)
+void ActionRunner::setHardware(const QString &torchLed, int torchBrightness, int brightnessStepPercent)
 {
 	m_torchLed = torchLed;
 	m_torchBrightness = torchBrightness;
 	m_stepPercent = brightnessStepPercent;
 }
 
-void Actions::run(const QString &specString)
+bool ActionRunner::runById(const QString &actionId)
+{
+	if (actionId.isEmpty() || actionId == QLatin1String("none"))
+		return true;
+	if (!m_library->exists(actionId)) {
+		qWarning("phone-keyconfig: action '%s' no longer exists", qPrintable(actionId));
+		return true;
+	}
+	return runSpec(m_library->specOf(actionId));
+}
+
+bool ActionRunner::runSpec(const QString &specString)
 {
 	const Spec spec = Spec::parse(specString);
 	switch (spec.kind) {
 	case Spec::None:
-		return;
+		return true;
 	case Spec::Builtin:
-		builtin(spec.payload);
-		return;
+		return builtin(spec.payload);
 	case Spec::App:
 		launchApp(spec.payload);
-		return;
+		return true;
 	case Spec::Command:
 		command(spec.payload);
-		return;
+		return true;
 	}
+	return true;
 }
 
-void Actions::builtin(const QString &id)
+bool ActionRunner::builtin(const QString &id)
 {
 	if (id == QLatin1String("screen-toggle"))
-		screenToggle();
+		return false;   // the daemon handles this one
+	if (id == QLatin1String("power-off"))
+		powerOff();
+	else if (id == QLatin1String("restart"))
+		restart();
+	else if (id == QLatin1String("lock-screen"))
+		lockScreen();
 	else if (id == QLatin1String("power-menu"))
 		powerMenu();
 	else if (id == QLatin1String("brightness-up"))
@@ -65,30 +93,39 @@ void Actions::builtin(const QString &id)
 		screenshot();
 	else
 		qWarning("phone-keyconfig: unknown built-in action '%s'", qPrintable(id));
+	return true;
 }
 
-void Actions::screenToggle()
+void ActionRunner::powerOff()
 {
-	m_keys->replayPowerTap();
+	sessionCall(QStringLiteral("org.kde.Shutdown"), QStringLiteral("/Shutdown"),
+		QStringLiteral("org.kde.Shutdown"), QStringLiteral("logoutAndShutdown"));
 }
 
-void Actions::powerMenu()
+void ActionRunner::restart()
 {
-	// Our own menu (phone-keyconfig --power-menu), NOT org.kde.LogoutPrompt.
-	// promptAll starts plasma-shutdown but nothing is drawn on this Plasma
-	// Mobile shell, so the menu has to be one we render ourselves.
-	if (!QProcess::startDetached(QStringLiteral("phone-keyconfig"),
-			{QStringLiteral("--power-menu")}))
+	sessionCall(QStringLiteral("org.kde.Shutdown"), QStringLiteral("/Shutdown"),
+		QStringLiteral("org.kde.Shutdown"), QStringLiteral("logoutAndReboot"));
+}
+
+void ActionRunner::lockScreen()
+{
+	sessionCall(QStringLiteral("org.freedesktop.ScreenSaver"), QStringLiteral("/ScreenSaver"),
+		QStringLiteral("org.freedesktop.ScreenSaver"), QStringLiteral("Lock"));
+}
+
+void ActionRunner::powerMenu()
+{
+	if (!QProcess::startDetached(QStringLiteral("phone-keyconfig-menu"), {}))
 		qWarning("phone-keyconfig: could not launch the power menu");
 }
 
-void Actions::brightness(int direction)
+void ActionRunner::brightness(int direction)
 {
 	const QString service = QStringLiteral("org.kde.ScreenBrightness");
 	const QString root = QStringLiteral("/org/kde/ScreenBrightness");
 	QDBusConnection bus = QDBusConnection::sessionBus();
 
-	// Which display: the internal one if it says so, else the first listed.
 	QDBusInterface rootIface(service, root, service, bus);
 	const QStringList names = rootIface.property("DisplaysDBusNames").toStringList();
 	if (names.isEmpty()) {
@@ -112,18 +149,15 @@ void Actions::brightness(int direction)
 	if (max <= 0)
 		return;
 	const int step = qMax(1, max * m_stepPercent / 100);
-	// Never all the way to 0: a screen you cannot see is a screen you cannot
-	// fix from the screen.
 	const int floor = qMax(1, max / 100);
 	int next = cur + direction * step;
 	next = qBound(floor, next, max);
 	if (next == cur)
 		return;
-	// SetBrightness(i value, u flags): flags 0 = let the OSD show.
 	display.asyncCall(QStringLiteral("SetBrightness"), next, QVariant::fromValue(uint(0)));
 }
 
-void Actions::torchToggle()
+void ActionRunner::torchToggle()
 {
 	QFile f(m_torchLed);
 	if (!f.open(QIODevice::ReadWrite | QIODevice::Text)) {
@@ -139,15 +173,13 @@ void Actions::torchToggle()
 	f.close();
 }
 
-void Actions::screenshot()
+void ActionRunner::screenshot()
 {
-	QDBusMessage m = QDBusMessage::createMethodCall(
-		QStringLiteral("org.surya.Screenglaze"), QStringLiteral("/"),
+	sessionCall(QStringLiteral("org.surya.Screenglaze"), QStringLiteral("/"),
 		QStringLiteral("org.surya.Screenglaze"), QStringLiteral("shoot"));
-	QDBusConnection::sessionBus().asyncCall(m);
 }
 
-void Actions::launchApp(const QString &desktopId)
+void ActionRunner::launchApp(const QString &desktopId)
 {
 	const QString file = QStandardPaths::locate(QStandardPaths::ApplicationsLocation,
 		desktopId + QStringLiteral(".desktop"));
@@ -164,8 +196,6 @@ void Actions::launchApp(const QString &desktopId)
 		qWarning("phone-keyconfig: %s has no Exec=", qPrintable(file));
 		return;
 	}
-	// Field codes (%f %u %i %c ...) stand for arguments we do not have. Drop
-	// them; "%%" is a literal percent.
 	static const QRegularExpression fieldCode(QStringLiteral("%[fFuUdDnNickvm]"));
 	exec.replace(fieldCode, QString());
 	exec.replace(QLatin1String("%%"), QLatin1String("%"));
@@ -178,7 +208,7 @@ void Actions::launchApp(const QString &desktopId)
 		qWarning("phone-keyconfig: could not launch %s", qPrintable(desktopId));
 }
 
-void Actions::command(const QString &shell)
+void ActionRunner::command(const QString &shell)
 {
 	if (shell.trimmed().isEmpty())
 		return;
