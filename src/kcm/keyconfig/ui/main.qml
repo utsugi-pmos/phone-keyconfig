@@ -1,18 +1,24 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 //
-// The "Phone keys" KCM: an action per gesture, plus the timings. The Apply
-// button is driven by kcm.backend.dirty from kcm.cpp.
+// The "Phone keys" KCM. FormCard sections make the groups and the tappable rows
+// obvious; there is no Apply button -- every change is saved at once.
 import QtQuick
-import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
+import org.kde.kirigamiaddons.formcard as FormCard
 import org.kde.kcmutils as KCM
 
 KCM.SimpleKCM {
     id: root
-
     readonly property var backend: kcm.backend
 
+    // binding()/nameOf() are functions, not properties, so bump this on every
+    // change to force the descriptions to re-read.
+    property int rev: 0
+    Connections { target: root.backend; function onChanged() { root.rev++ } }
+
+    function actionName(slot) { root.rev; return root.backend.library.nameOf(root.backend.binding(slot)) }
+    function actionIcon(slot) { root.rev; return root.backend.library.iconOf(root.backend.binding(slot)) }
     function pickFor(slot) {
         kcm.push("ActionPicker.qml", {
             library: root.backend.library,
@@ -25,52 +31,98 @@ KCM.SimpleKCM {
     ColumnLayout {
         spacing: 0
 
-        Kirigami.Heading { level: 2; text: i18n("Power button"); Layout.margins: Kirigami.Units.largeSpacing }
+        Kirigami.InlineMessage {
+            Layout.fillWidth: true
+            Layout.margins: Kirigami.Units.largeSpacing
+            visible: (root.rev, root.backend.binding("power_release")) !== "screen-toggle"
+            type: Kirigami.MessageType.Warning
+            text: i18n("A short press is what locks and wakes the screen. With something else here you may be left with no easy way to turn the screen off or on.")
+        }
 
-        Component {
-            id: bindingRow
-            Controls.ItemDelegate {
-                id: d
-                property string title: ""
-                property string subtitle: ""
-                property string slot: ""
-                property string current: slot.length ? root.backend.library.nameOf(root.backend.binding(slot)) : ""
-                Layout.fillWidth: true
-                Connections {
-                    target: root.backend
-                    function onChanged() { d.current = root.backend.library.nameOf(root.backend.binding(d.slot)) }
-                }
-                contentItem: ColumnLayout {
-                    Controls.Label { text: d.title; font.bold: true; Layout.fillWidth: true; wrapMode: Text.WordWrap }
-                    Controls.Label { text: d.current; color: Kirigami.Theme.highlightColor; Layout.fillWidth: true }
-                    Controls.Label { visible: d.subtitle.length; text: d.subtitle; font: Kirigami.Theme.smallFont; opacity: 0.7; Layout.fillWidth: true; wrapMode: Text.WordWrap }
-                }
-                onClicked: root.pickFor(slot)
+        FormCard.FormHeader { title: i18n("Power button") }
+        FormCard.FormCard {
+            FormCard.FormButtonDelegate {
+                text: i18n("Short press, released")
+                description: root.actionName("power_release")
+                icon.name: root.actionIcon("power_release")
+                onClicked: root.pickFor("power_release")
+            }
+            FormCard.FormDelegateSeparator {}
+            FormCard.FormButtonDelegate {
+                text: i18n("Held for %1 s", (root.backend.holdMenuMs / 1000).toFixed(1))
+                description: root.actionName("power_hold")
+                icon.name: root.actionIcon("power_hold")
+                onClicked: root.pickFor("power_hold")
+            }
+            FormCard.FormDelegateSeparator {}
+            FormCard.FormButtonDelegate {
+                text: i18n("Double tap")
+                description: root.actionName("double_tap")
+                icon.name: root.actionIcon("double_tap")
+                onClicked: root.pickFor("double_tap")
             }
         }
 
-        Loader { Layout.fillWidth: true; sourceComponent: bindingRow; onLoaded: { item.title = i18n("Short press, released"); item.subtitle = i18n("Nothing else pressed. Fires after the double-tap window."); item.slot = "power_release" } }
-        Loader { Layout.fillWidth: true; sourceComponent: bindingRow; onLoaded: { item.title = i18n("Held for %1 s", (root.backend.holdMenuMs/1000).toFixed(1)); item.slot = "power_hold" } }
-        Loader { Layout.fillWidth: true; sourceComponent: bindingRow; onLoaded: { item.title = i18n("Double tap"); item.slot = "double_tap" } }
-
-        Kirigami.Heading { level: 2; text: i18n("Power held + volume"); Layout.margins: Kirigami.Units.largeSpacing }
-        Controls.Label {
-            text: i18n("While power is held, a volume key runs its action instead of changing the volume. Each press runs it again.")
-            wrapMode: Text.WordWrap; font: Kirigami.Theme.smallFont; opacity: 0.8
-            Layout.fillWidth: true; Layout.leftMargin: Kirigami.Units.largeSpacing; Layout.rightMargin: Kirigami.Units.largeSpacing
+        FormCard.FormHeader { title: i18n("Power held + volume") }
+        FormCard.FormCard {
+            FormCard.FormButtonDelegate {
+                text: i18n("Volume up")
+                description: root.actionName("power_volume_up")
+                icon.name: root.actionIcon("power_volume_up")
+                onClicked: root.pickFor("power_volume_up")
+            }
+            FormCard.FormDelegateSeparator {}
+            FormCard.FormButtonDelegate {
+                text: i18n("Volume down")
+                description: root.actionName("power_volume_down")
+                icon.name: root.actionIcon("power_volume_down")
+                onClicked: root.pickFor("power_volume_down")
+            }
+            FormCard.FormDelegateSeparator {}
+            FormCard.FormTextDelegate {
+                text: i18n("While power is held, a volume key runs its action instead of changing the volume. Each press runs it again.")
+                textItem.wrapMode: Text.WordWrap
+            }
         }
-        Loader { Layout.fillWidth: true; sourceComponent: bindingRow; onLoaded: { item.title = i18n("Volume up"); item.slot = "power_volume_up" } }
-        Loader { Layout.fillWidth: true; sourceComponent: bindingRow; onLoaded: { item.title = i18n("Volume down"); item.slot = "power_volume_down" } }
 
-        Kirigami.Heading { level: 2; text: i18n("Timing"); Layout.margins: Kirigami.Units.largeSpacing }
-
-        Kirigami.FormLayout {
-            Layout.fillWidth: true
-            Controls.SpinBox { Kirigami.FormData.label: i18n("Hold for the menu (ms)"); from: 500; to: 10000; stepSize: 100; value: root.backend.holdMenuMs; onValueModified: root.backend.holdMenuMs = value }
-            Controls.SpinBox { Kirigami.FormData.label: i18n("Double-tap window (ms)"); from: 0; to: 1000; stepSize: 25; value: root.backend.doubleTapMs; onValueModified: root.backend.doubleTapMs = value }
-            Controls.SpinBox { Kirigami.FormData.label: i18n("Volume forgiveness (ms)"); from: 0; to: 500; stepSize: 25; value: root.backend.forgivenessMs; onValueModified: root.backend.forgivenessMs = value }
-            Controls.SpinBox { Kirigami.FormData.label: i18n("Brightness step (%)"); from: 1; to: 50; stepSize: 1; value: root.backend.brightnessStepPercent; onValueModified: root.backend.brightnessStepPercent = value }
-            Controls.SpinBox { Kirigami.FormData.label: i18n("Flashlight brightness"); from: 1; to: 255; stepSize: 5; value: root.backend.torchBrightness; onValueModified: root.backend.torchBrightness = value }
+        FormCard.FormHeader { title: i18n("Timing") }
+        FormCard.FormCard {
+            FormCard.FormSpinBoxDelegate {
+                label: i18n("Hold for the menu (ms)")
+                from: 500; to: 10000; stepSize: 100
+                value: root.backend.holdMenuMs
+                onValueChanged: root.backend.holdMenuMs = value
+            }
+            FormCard.FormDelegateSeparator {}
+            FormCard.FormSpinBoxDelegate {
+                label: i18n("Double-tap window (ms)")
+                from: 0; to: 1000; stepSize: 25
+                value: root.backend.doubleTapMs
+                onValueChanged: root.backend.doubleTapMs = value
+            }
+            FormCard.FormDelegateSeparator {}
+            FormCard.FormSpinBoxDelegate {
+                label: i18n("Volume forgiveness (ms)")
+                from: 0; to: 500; stepSize: 25
+                value: root.backend.forgivenessMs
+                onValueChanged: root.backend.forgivenessMs = value
+            }
+            FormCard.FormDelegateSeparator {}
+            FormCard.FormSpinBoxDelegate {
+                label: i18n("Brightness step (%)")
+                from: 1; to: 50; stepSize: 1
+                value: root.backend.brightnessStepPercent
+                onValueChanged: root.backend.brightnessStepPercent = value
+            }
+            FormCard.FormDelegateSeparator {}
+            FormCard.FormSpinBoxDelegate {
+                label: i18n("Flashlight brightness")
+                from: 1; to: 255; stepSize: 5
+                value: root.backend.torchBrightness
+                onValueChanged: root.backend.torchBrightness = value
+            }
         }
+
+        Item { Layout.preferredHeight: Kirigami.Units.largeSpacing }
     }
 }

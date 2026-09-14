@@ -4,6 +4,7 @@
 #include <KPluginFactory>
 #include <KQuickConfigModule>
 
+// No Apply button: every change is saved at once (see the backend/models).
 class KCMPhonePowerMenu : public KQuickConfigModule
 {
 	Q_OBJECT
@@ -14,15 +15,12 @@ public:
 		: KQuickConfigModule(parent, data)
 		, m_backend(new keyconfig::PowerMenuBackend(this))
 	{
-		connect(m_backend, &keyconfig::PowerMenuBackend::dirtyChanged, this,
-			[this] { setNeedsSave(m_backend->dirty()); });
-		setNeedsSave(m_backend->dirty());
 	}
 
 	keyconfig::PowerMenuBackend *backend() const { return m_backend; }
 
 	void load() override { m_backend->load(); }
-	void save() override { m_backend->save(); }
+	void save() override {}
 	void defaults() override { m_backend->restoreDefaults(); }
 
 private:

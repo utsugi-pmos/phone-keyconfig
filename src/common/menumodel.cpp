@@ -92,6 +92,7 @@ void MenuModel::setLayout(const QString &v)
 	m_layout = norm;
 	Q_EMIT layoutChanged();
 	markDirty();
+	save();
 }
 
 void MenuModel::setEnabled(int row, bool enabled)
@@ -101,6 +102,7 @@ void MenuModel::setEnabled(int row, bool enabled)
 	m_items[row].enabled = enabled;
 	Q_EMIT dataChanged(index(row), index(row), {EnabledRole});
 	markDirty();
+	save();
 }
 
 void MenuModel::move(int from, int to)
@@ -113,6 +115,7 @@ void MenuModel::move(int from, int to)
 	m_items.move(from, to);
 	endMoveRows();
 	markDirty();
+	save();
 }
 
 void MenuModel::addAction(const QString &actionId)
@@ -123,6 +126,7 @@ void MenuModel::addAction(const QString &actionId)
 	m_items.append({actionId, true});
 	endInsertRows();
 	markDirty();
+	save();
 }
 
 void MenuModel::remove(int row)
@@ -133,6 +137,7 @@ void MenuModel::remove(int row)
 	m_items.removeAt(row);
 	endRemoveRows();
 	markDirty();
+	save();
 }
 
 bool MenuModel::contains(const QString &actionId) const
@@ -233,6 +238,7 @@ void MenuModel::restoreDefaults()
 	endResetModel();
 	setLayout(QStringLiteral("list"));
 	markDirty();
+	save();
 }
 
 } // namespace keyconfig

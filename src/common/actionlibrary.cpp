@@ -168,7 +168,7 @@ QString ActionLibrary::addCustom(const QString &name, const QString &icon, const
 	beginInsertRows({}, m_actions.size(), m_actions.size());
 	m_actions.append(a);
 	endInsertRows();
-	markDirty();
+	save();          // direct config: no Apply button
 	return id;
 }
 
@@ -182,7 +182,7 @@ void ActionLibrary::editCustom(const QString &id, const QString &name, const QSt
 		a.icon = icon.trimmed().isEmpty() ? QStringLiteral("system-run-symbolic") : icon.trimmed();
 		a.spec = Spec::parse(spec).toString();
 		Q_EMIT dataChanged(index(i), index(i));
-		markDirty();
+		save();
 		return;
 	}
 }
@@ -195,7 +195,7 @@ void ActionLibrary::removeCustom(const QString &id)
 		beginRemoveRows({}, i, i);
 		m_actions.removeAt(i);
 		endRemoveRows();
-		markDirty();
+		save();
 		return;
 	}
 }
