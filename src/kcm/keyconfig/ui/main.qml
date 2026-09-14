@@ -88,57 +88,52 @@ KCM.SimpleKCM {
 
         FormCard.FormHeader { title: i18n("Timing") }
         FormCard.FormCard {
-            Stepper { label: i18n("Hold for the menu"); unit: "ms"; from: 500; to: 10000; step: 100
-                value: root.backend.holdMenuMs; onChanged: v => root.backend.holdMenuMs = v }
+            // Plain number fields: tap, the keypad opens, type. Saved when you
+            // finish (focus leaves), clamped to the allowed range.
+            NumberField { label: i18n("Hold for the menu (ms)"); min: 500; max: 10000
+                value: root.backend.holdMenuMs; onCommitted: v => root.backend.holdMenuMs = v }
             FormCard.FormDelegateSeparator {}
-            Stepper { label: i18n("Double-tap window"); unit: "ms"; from: 0; to: 1000; step: 25
-                value: root.backend.doubleTapMs; onChanged: v => root.backend.doubleTapMs = v }
+            NumberField { label: i18n("Double-tap window (ms)"); min: 0; max: 1000
+                value: root.backend.doubleTapMs; onCommitted: v => root.backend.doubleTapMs = v }
             FormCard.FormDelegateSeparator {}
-            Stepper { label: i18n("Volume forgiveness"); unit: "ms"; from: 0; to: 500; step: 25
-                value: root.backend.forgivenessMs; onChanged: v => root.backend.forgivenessMs = v }
+            NumberField { label: i18n("Volume forgiveness (ms)"); min: 0; max: 500
+                value: root.backend.forgivenessMs; onCommitted: v => root.backend.forgivenessMs = v }
             FormCard.FormDelegateSeparator {}
-            Stepper { label: i18n("Brightness step"); unit: "%"; from: 1; to: 50; step: 1
-                value: root.backend.brightnessStepPercent; onChanged: v => root.backend.brightnessStepPercent = v }
+            NumberField { label: i18n("Brightness step (%)"); min: 1; max: 50
+                value: root.backend.brightnessStepPercent; onCommitted: v => root.backend.brightnessStepPercent = v }
             FormCard.FormDelegateSeparator {}
-            Stepper { label: i18n("Flashlight brightness"); unit: ""; from: 1; to: 255; step: 5
-                value: root.backend.torchBrightness; onChanged: v => root.backend.torchBrightness = v }
+            NumberField { label: i18n("Flashlight brightness (1-255)"); min: 1; max: 255
+                value: root.backend.torchBrightness; onCommitted: v => root.backend.torchBrightness = v }
         }
 
         Item { Layout.preferredHeight: Kirigami.Units.largeSpacing }
     }
 
-    // A timing row with big, finger-sized - / + buttons. FormSpinBoxDelegate's
-    // own buttons fought the value binding and looked like nothing happened.
-    component Stepper: FormCard.AbstractFormDelegate {
-        id: st
+    // A labelled number field. Commits on editingFinished, clamped.
+    component NumberField: FormCard.AbstractFormDelegate {
+        id: nf
         property string label: ""
-        property string unit: ""
-        property int from: 0
-        property int to: 100
-        property int step: 1
+        property int min: 0
+        property int max: 1000000
         property int value: 0
-        signal changed(int v)
+        signal committed(int v)
         background: null
+        onValueChanged: field.text = value
         contentItem: RowLayout {
             spacing: Kirigami.Units.largeSpacing
-            Controls.Label { text: st.label; Layout.fillWidth: true; wrapMode: Text.WordWrap }
-            Controls.Button {
-                icon.name: "list-remove-symbolic"; display: Controls.AbstractButton.IconOnly
-                enabled: st.value > st.from
-                implicitWidth: Kirigami.Units.gridUnit * 2.6; implicitHeight: Kirigami.Units.gridUnit * 2.6
-                onClicked: st.changed(Math.max(st.from, st.value - st.step))
-            }
-            Controls.Label {
-                text: st.value + (st.unit.length ? " " + st.unit : "")
-                horizontalAlignment: Text.AlignHCenter
-                Layout.minimumWidth: Kirigami.Units.gridUnit * 4
-                font.bold: true
-            }
-            Controls.Button {
-                icon.name: "list-add-symbolic"; display: Controls.AbstractButton.IconOnly
-                enabled: st.value < st.to
-                implicitWidth: Kirigami.Units.gridUnit * 2.6; implicitHeight: Kirigami.Units.gridUnit * 2.6
-                onClicked: st.changed(Math.min(st.to, st.value + st.step))
+            Controls.Label { text: nf.label; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+            Controls.TextField {
+                id: field
+                text: nf.value
+                horizontalAlignment: Text.AlignRight
+                inputMethodHints: Qt.ImhDigitsOnly
+                validator: IntValidator { bottom: nf.min; top: nf.max }
+                Layout.preferredWidth: Kirigami.Units.gridUnit * 6
+                onEditingFinished: {
+                    var v = Math.max(nf.min, Math.min(nf.max, parseInt(text) || nf.min))
+                    nf.committed(v)
+                    text = v
+                }
             }
         }
     }
