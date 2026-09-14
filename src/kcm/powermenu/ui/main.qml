@@ -41,12 +41,9 @@ KCM.ScrollViewKCM {
         delegate: Controls.ItemDelegate {
             id: d
             width: ListView.view.width
+            // model.* rather than "required property", because a role named
+            // icon or enabled would shadow ItemDelegate's own FINAL properties.
             required property int index
-            required property string name
-            required property string icon
-            required property string summary
-            required property bool enabled
-            required property bool removable
 
             contentItem: RowLayout {
                 spacing: Kirigami.Units.smallSpacing
@@ -55,20 +52,20 @@ KCM.ScrollViewKCM {
                     Controls.ToolButton { icon.name: "arrow-up"; enabled: d.index > 0; onClicked: root.menu.move(d.index, d.index - 1); implicitHeight: Kirigami.Units.gridUnit * 1.2 }
                     Controls.ToolButton { icon.name: "arrow-down"; enabled: d.index < list.count - 1; onClicked: root.menu.move(d.index, d.index + 1); implicitHeight: Kirigami.Units.gridUnit * 1.2 }
                 }
-                Kirigami.Icon { source: d.icon; Layout.preferredWidth: Kirigami.Units.iconSizes.medium; Layout.preferredHeight: Kirigami.Units.iconSizes.medium; opacity: d.enabled ? 1 : 0.4 }
+                Kirigami.Icon { source: model.icon; Layout.preferredWidth: Kirigami.Units.iconSizes.medium; Layout.preferredHeight: Kirigami.Units.iconSizes.medium; opacity: model.enabled ? 1 : 0.4 }
                 ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 0
-                    Controls.Label { text: d.name; Layout.fillWidth: true; elide: Text.ElideRight; opacity: d.enabled ? 1 : 0.5 }
-                    Controls.Label { text: d.summary; font: Kirigami.Theme.smallFont; opacity: 0.6; Layout.fillWidth: true; elide: Text.ElideRight }
+                    Controls.Label { text: model.name; Layout.fillWidth: true; elide: Text.ElideRight; opacity: model.enabled ? 1 : 0.5 }
+                    Controls.Label { text: model.summary; font: Kirigami.Theme.smallFont; opacity: 0.6; Layout.fillWidth: true; elide: Text.ElideRight }
                 }
                 Controls.ToolButton {
-                    visible: d.removable
+                    visible: model.removable
                     icon.name: "edit-delete-symbolic"
                     onClicked: root.menu.remove(d.index)
                 }
                 Controls.Switch {
-                    checked: d.enabled
+                    checked: model.enabled
                     onToggled: root.menu.setEnabled(d.index, checked)
                 }
             }
