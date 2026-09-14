@@ -1,0 +1,18 @@
+[Desktop Entry]
+Type=Application
+Name=Phone keys
+Name[es]=Botones del teléfono
+GenericName=Button actions
+GenericName[es]=Acciones de los botones
+Comment=What the power and volume buttons do: screenshot, power menu, double tap, brightness
+Comment[es]=Qué hacen los botones de encendido y volumen: captura, menú de apagado, doble toque, brillo
+Exec=phone-keyconfig
+Icon=phone-keyconfig
+Terminal=false
+Categories=Settings;Qt;KDE;
+Keywords=power;volume;button;key;screenshot;flashlight;torch;brightness;
+Keywords[es]=encendido;volumen;botón;tecla;captura;linterna;brillo;
+# Without this Plasma does not tie the window to this entry: the task switcher
+# shows it with no icon and no name. Qt builds the identifier from
+# QGuiApplication::setDesktopFileName(), so the two have to say the same.
+StartupWMClass=phone-keyconfig

@@ -1,0 +1,30 @@
+# phone-keyconfig: read access to the three physical buttons and to /dev/uinput,
+# and to nothing else.
+#
+# TAG+="uaccess" rather than the 'input' group, on purpose. Putting the user in
+# 'input' hands EVERY program they run the whole touchscreen -- that is a
+# keylogger for anything typed on the on-screen keyboard, granted permanently,
+# to get at three buttons. 'uaccess' grants an ACL to the user of the currently
+# active seat session only, and only on the devices named here.
+#
+# The number has to be LOWER than 73: 73-seat-late.rules is what turns the tag
+# into an actual ACL, and a tag set after it runs is a tag nobody reads.
+#
+# The names are this phone's (POCO X3 NFC, sm7150). Each device carries one key
+# and nothing else: pm8941_pwrkey is power, pm8941_resin is volume-down, and
+# gpio-keys is volume-up (KEY=...8000... = KEY_VOLUMEUP alone). If a kernel
+# update renames them the daemon logs "no input device ... is readable" and the
+# buttons keep their native behaviour; `cat /proc/bus/input/devices` has the new
+# names.
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="pm8941_pwrkey", TAG+="uaccess"
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="pm8941_resin", TAG+="uaccess"
+SUBSYSTEM=="input", KERNEL=="event*", ATTRS{name}=="gpio-keys", TAG+="uaccess"
+
+# /dev/uinput, to hand keys BACK. The daemon grabs the three buttons so the
+# shell never sees a raw press; whatever it decides to let through (a normal
+# volume press, a power tap) is replayed through a virtual device, and that is
+# the only way to put a key event back into the system.
+#
+# static_node because /dev/uinput belongs to a module and may exist before any
+# uevent udev could react to; the tag alone would then apply to nothing.
+KERNEL=="uinput", SUBSYSTEM=="misc", OPTIONS+="static_node=uinput", TAG+="uaccess"
