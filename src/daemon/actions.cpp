@@ -74,10 +74,12 @@ void Actions::screenToggle()
 
 void Actions::powerMenu()
 {
-	QDBusMessage m = QDBusMessage::createMethodCall(
-		QStringLiteral("org.kde.LogoutPrompt"), QStringLiteral("/LogoutPrompt"),
-		QStringLiteral("org.kde.LogoutPrompt"), QStringLiteral("promptAll"));
-	QDBusConnection::sessionBus().asyncCall(m);
+	// Our own menu (phone-keyconfig --power-menu), NOT org.kde.LogoutPrompt.
+	// promptAll starts plasma-shutdown but nothing is drawn on this Plasma
+	// Mobile shell, so the menu has to be one we render ourselves.
+	if (!QProcess::startDetached(QStringLiteral("phone-keyconfig"),
+			{QStringLiteral("--power-menu")}))
+		qWarning("phone-keyconfig: could not launch the power menu");
 }
 
 void Actions::brightness(int direction)
