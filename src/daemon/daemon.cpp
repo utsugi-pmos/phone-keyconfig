@@ -94,18 +94,27 @@ void Daemon::onTimer()
 
 void Daemon::execute(const std::vector<Action> &actions)
 {
+	// Every gesture is logged with the binding it ran. When a button "does
+	// nothing" this is the line that says whether the machine saw the gesture
+	// and what it tried to do about it.
 	for (const Action &a : actions) {
 		switch (a.kind) {
 		case Action::ScreenToggle:
+			qInfo("phone-keyconfig: power released -> %s", qPrintable(m_cfg.powerRelease));
 			m_actions.run(m_cfg.powerRelease);
 			break;
 		case Action::PowerMenu:
+			qInfo("phone-keyconfig: power held -> %s", qPrintable(m_cfg.powerHold));
 			m_actions.run(m_cfg.powerHold);
 			break;
-		case Action::VolumeCombo:
-			m_actions.run(a.volume == Volume::Up ? m_cfg.powerVolumeUp : m_cfg.powerVolumeDown);
+		case Action::VolumeCombo: {
+			const QString &b = a.volume == Volume::Up ? m_cfg.powerVolumeUp : m_cfg.powerVolumeDown;
+			qInfo("phone-keyconfig: power + volume-%s -> %s", a.volume == Volume::Up ? "up" : "down", qPrintable(b));
+			m_actions.run(b);
 			break;
+		}
 		case Action::DoubleTap:
+			qInfo("phone-keyconfig: power double tap -> %s", qPrintable(m_cfg.doubleTap));
 			m_actions.run(m_cfg.doubleTap);
 			break;
 		case Action::PassVolume:
