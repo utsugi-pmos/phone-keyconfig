@@ -3,6 +3,7 @@
 
 #include <QDBusConnection>
 #include <QDBusMessage>
+#include <QDBusPendingCall>
 #include <QDebug>
 
 namespace keyconfig {
