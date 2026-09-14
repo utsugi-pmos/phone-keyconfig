@@ -47,11 +47,21 @@ KCM.ScrollViewKCM {
             readonly property int idx: index
 
             contentItem: RowLayout {
-                spacing: Kirigami.Units.smallSpacing
-                ColumnLayout {
-                    spacing: 0
-                    Controls.ToolButton { icon.name: "arrow-up"; enabled: d.idx > 0; onClicked: root.menu.move(d.idx, d.idx - 1); implicitHeight: Kirigami.Units.gridUnit * 1.2 }
-                    Controls.ToolButton { icon.name: "arrow-down"; enabled: d.idx < list.count - 1; onClicked: root.menu.move(d.idx, d.idx + 1); implicitHeight: Kirigami.Units.gridUnit * 1.2 }
+                spacing: Kirigami.Units.largeSpacing
+                RowLayout {
+                    spacing: Kirigami.Units.smallSpacing
+                    Controls.Button {
+                        icon.name: "go-up-symbolic"; display: Controls.AbstractButton.IconOnly
+                        enabled: d.idx > 0
+                        implicitWidth: Kirigami.Units.gridUnit * 2.6; implicitHeight: Kirigami.Units.gridUnit * 2.6
+                        onClicked: root.menu.move(d.idx, d.idx - 1)
+                    }
+                    Controls.Button {
+                        icon.name: "go-down-symbolic"; display: Controls.AbstractButton.IconOnly
+                        enabled: d.idx < list.count - 1
+                        implicitWidth: Kirigami.Units.gridUnit * 2.6; implicitHeight: Kirigami.Units.gridUnit * 2.6
+                        onClicked: root.menu.move(d.idx, d.idx + 1)
+                    }
                 }
                 Kirigami.Icon { source: model.icon; Layout.preferredWidth: Kirigami.Units.iconSizes.medium; Layout.preferredHeight: Kirigami.Units.iconSizes.medium; opacity: model.enabled ? 1 : 0.4 }
                 ColumnLayout {

@@ -3,6 +3,7 @@
 // The "Phone keys" KCM. FormCard sections make the groups and the tappable rows
 // obvious; there is no Apply button -- every change is saved at once.
 import QtQuick
+import QtQuick.Controls as Controls
 import QtQuick.Layouts
 import org.kde.kirigami as Kirigami
 import org.kde.kirigamiaddons.formcard as FormCard
@@ -87,42 +88,58 @@ KCM.SimpleKCM {
 
         FormCard.FormHeader { title: i18n("Timing") }
         FormCard.FormCard {
-            FormCard.FormSpinBoxDelegate {
-                label: i18n("Hold for the menu (ms)")
-                from: 500; to: 10000; stepSize: 100
-                value: root.backend.holdMenuMs
-                onValueChanged: root.backend.holdMenuMs = value
-            }
+            Stepper { label: i18n("Hold for the menu"); unit: "ms"; from: 500; to: 10000; step: 100
+                value: root.backend.holdMenuMs; onChanged: v => root.backend.holdMenuMs = v }
             FormCard.FormDelegateSeparator {}
-            FormCard.FormSpinBoxDelegate {
-                label: i18n("Double-tap window (ms)")
-                from: 0; to: 1000; stepSize: 25
-                value: root.backend.doubleTapMs
-                onValueChanged: root.backend.doubleTapMs = value
-            }
+            Stepper { label: i18n("Double-tap window"); unit: "ms"; from: 0; to: 1000; step: 25
+                value: root.backend.doubleTapMs; onChanged: v => root.backend.doubleTapMs = v }
             FormCard.FormDelegateSeparator {}
-            FormCard.FormSpinBoxDelegate {
-                label: i18n("Volume forgiveness (ms)")
-                from: 0; to: 500; stepSize: 25
-                value: root.backend.forgivenessMs
-                onValueChanged: root.backend.forgivenessMs = value
-            }
+            Stepper { label: i18n("Volume forgiveness"); unit: "ms"; from: 0; to: 500; step: 25
+                value: root.backend.forgivenessMs; onChanged: v => root.backend.forgivenessMs = v }
             FormCard.FormDelegateSeparator {}
-            FormCard.FormSpinBoxDelegate {
-                label: i18n("Brightness step (%)")
-                from: 1; to: 50; stepSize: 1
-                value: root.backend.brightnessStepPercent
-                onValueChanged: root.backend.brightnessStepPercent = value
-            }
+            Stepper { label: i18n("Brightness step"); unit: "%"; from: 1; to: 50; step: 1
+                value: root.backend.brightnessStepPercent; onChanged: v => root.backend.brightnessStepPercent = v }
             FormCard.FormDelegateSeparator {}
-            FormCard.FormSpinBoxDelegate {
-                label: i18n("Flashlight brightness")
-                from: 1; to: 255; stepSize: 5
-                value: root.backend.torchBrightness
-                onValueChanged: root.backend.torchBrightness = value
-            }
+            Stepper { label: i18n("Flashlight brightness"); unit: ""; from: 1; to: 255; step: 5
+                value: root.backend.torchBrightness; onChanged: v => root.backend.torchBrightness = v }
         }
 
         Item { Layout.preferredHeight: Kirigami.Units.largeSpacing }
+    }
+
+    // A timing row with big, finger-sized - / + buttons. FormSpinBoxDelegate's
+    // own buttons fought the value binding and looked like nothing happened.
+    component Stepper: FormCard.AbstractFormDelegate {
+        id: st
+        property string label: ""
+        property string unit: ""
+        property int from: 0
+        property int to: 100
+        property int step: 1
+        property int value: 0
+        signal changed(int v)
+        background: null
+        contentItem: RowLayout {
+            spacing: Kirigami.Units.largeSpacing
+            Controls.Label { text: st.label; Layout.fillWidth: true; wrapMode: Text.WordWrap }
+            Controls.Button {
+                icon.name: "list-remove-symbolic"; display: Controls.AbstractButton.IconOnly
+                enabled: st.value > st.from
+                implicitWidth: Kirigami.Units.gridUnit * 2.6; implicitHeight: Kirigami.Units.gridUnit * 2.6
+                onClicked: st.changed(Math.max(st.from, st.value - st.step))
+            }
+            Controls.Label {
+                text: st.value + (st.unit.length ? " " + st.unit : "")
+                horizontalAlignment: Text.AlignHCenter
+                Layout.minimumWidth: Kirigami.Units.gridUnit * 4
+                font.bold: true
+            }
+            Controls.Button {
+                icon.name: "list-add-symbolic"; display: Controls.AbstractButton.IconOnly
+                enabled: st.value < st.to
+                implicitWidth: Kirigami.Units.gridUnit * 2.6; implicitHeight: Kirigami.Units.gridUnit * 2.6
+                onClicked: st.changed(Math.min(st.to, st.value + st.step))
+            }
+        }
     }
 }
