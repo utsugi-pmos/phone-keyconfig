@@ -25,7 +25,7 @@
 
 namespace keyconfig {
 
-struct Action {
+struct LibraryAction {
 	QString id;
 	QString name;
 	QString icon;
@@ -89,11 +89,11 @@ Q_SIGNALS:
 
 private:
 	void markDirty();
-	const Action *find(const QString &id) const;
-	static QList<Action> builtins();
+	const LibraryAction *find(const QString &id) const;
+	static QList<LibraryAction> builtins();
 	static QString summaryOfSpec(const QString &spec);
 
-	QList<Action> m_actions;   // built-ins first, then custom in creation order
+	QList<LibraryAction> m_actions;   // built-ins first, then custom in creation order
 	bool m_dirty = false;
 	mutable QVariantList m_apps;
 	mutable bool m_appsScanned = false;

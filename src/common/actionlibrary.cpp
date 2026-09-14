@@ -35,11 +35,11 @@ ActionLibrary::ActionLibrary(QObject *parent)
 	m_actions = builtins();
 }
 
-QList<Action> ActionLibrary::builtins()
+QList<LibraryAction> ActionLibrary::builtins()
 {
-	QList<Action> out;
+	QList<LibraryAction> out;
 	for (const Builtin &b : kBuiltins) {
-		Action a;
+		LibraryAction a;
 		a.id = QString::fromLatin1(b.id);
 		a.name = QString::fromLatin1(b.label);
 		a.icon = QString::fromLatin1(b.icon);
@@ -64,9 +64,9 @@ QString ActionLibrary::summaryOfSpec(const QString &spec)
 	return {};
 }
 
-const Action *ActionLibrary::find(const QString &id) const
+const LibraryAction *ActionLibrary::find(const QString &id) const
 {
-	for (const Action &a : m_actions) {
+	for (const LibraryAction &a : m_actions) {
 		if (a.id == id)
 			return &a;
 	}
@@ -82,7 +82,7 @@ QVariant ActionLibrary::data(const QModelIndex &index, int role) const
 {
 	if (index.row() < 0 || index.row() >= m_actions.size())
 		return {};
-	const Action &a = m_actions.at(index.row());
+	const LibraryAction &a = m_actions.at(index.row());
 	switch (role) {
 	case IdRole: return a.id;
 	case NameRole: return a.name;
@@ -111,23 +111,23 @@ QHash<int, QByteArray> ActionLibrary::roleNames() const
 }
 
 bool ActionLibrary::exists(const QString &id) const { return find(id) != nullptr; }
-QString ActionLibrary::nameOf(const QString &id) const { const Action *a = find(id); return a ? a->name : QString(); }
-QString ActionLibrary::iconOf(const QString &id) const { const Action *a = find(id); return a ? a->icon : QString(); }
-QString ActionLibrary::specOf(const QString &id) const { const Action *a = find(id); return a ? a->spec : QStringLiteral("none"); }
+QString ActionLibrary::nameOf(const QString &id) const { const LibraryAction *a = find(id); return a ? a->name : QString(); }
+QString ActionLibrary::iconOf(const QString &id) const { const LibraryAction *a = find(id); return a ? a->icon : QString(); }
+QString ActionLibrary::specOf(const QString &id) const { const LibraryAction *a = find(id); return a ? a->spec : QStringLiteral("none"); }
 QString ActionLibrary::summaryOf(const QString &id) const
 {
-	const Action *a = find(id);
+	const LibraryAction *a = find(id);
 	if (!a)
 		return QStringLiteral("(missing action)");
 	return a->builtin ? a->name : summaryOfSpec(a->spec);
 }
-bool ActionLibrary::isCustom(const QString &id) const { const Action *a = find(id); return a && !a->builtin; }
+bool ActionLibrary::isCustom(const QString &id) const { const LibraryAction *a = find(id); return a && !a->builtin; }
 
 QVariantList ActionLibrary::list(const QString &context) const
 {
 	const bool menu = context == QLatin1String("menu");
 	QVariantList out;
-	for (const Action &a : m_actions) {
+	for (const LibraryAction &a : m_actions) {
 		if (menu ? !a.inMenu : !a.inGesture)
 			continue;
 		QVariantMap m;
@@ -157,7 +157,7 @@ QString ActionLibrary::addCustom(const QString &name, const QString &icon, const
 		id = QStringLiteral("custom-%1").arg(n++);
 	} while (find(id));
 
-	Action a;
+	LibraryAction a;
 	a.id = id;
 	a.name = name.trimmed().isEmpty() ? summaryOfSpec(spec) : name.trimmed();
 	a.icon = icon.trimmed().isEmpty() ? QStringLiteral("system-run-symbolic") : icon.trimmed();
@@ -175,7 +175,7 @@ QString ActionLibrary::addCustom(const QString &name, const QString &icon, const
 void ActionLibrary::editCustom(const QString &id, const QString &name, const QString &icon, const QString &spec)
 {
 	for (int i = 0; i < m_actions.size(); ++i) {
-		Action &a = m_actions[i];
+		LibraryAction &a = m_actions[i];
 		if (a.id != id || a.builtin)
 			continue;
 		a.name = name.trimmed().isEmpty() ? summaryOfSpec(spec) : name.trimmed();
@@ -262,7 +262,7 @@ void ActionLibrary::load()
 		if (id.isEmpty() || find(id))
 			continue;
 		s.beginGroup(groupFor(id));
-		Action a;
+		LibraryAction a;
 		a.id = id;
 		a.name = s.value(QStringLiteral("name")).toString();
 		a.icon = s.value(QStringLiteral("icon"), QStringLiteral("system-run-symbolic")).toString();
@@ -292,7 +292,7 @@ void ActionLibrary::save()
 	}
 
 	QStringList customIds;
-	for (const Action &a : m_actions) {
+	for (const LibraryAction &a : m_actions) {
 		if (a.builtin)
 			continue;
 		customIds << a.id;
