@@ -34,7 +34,7 @@ Values Settings::load()
 	// The fallbacks here are the fallbacks of last resort, for a system with no
 	// defaults file at all; the shipped phone-keyconfig.conf is the real default.
 	s.beginGroup(QStringLiteral("timing"));
-	v.timing.holdMenuMs = s.value(QStringLiteral("hold_menu_ms"), 3000).toLongLong();
+	v.timing.holdMenuMs = s.value(QStringLiteral("hold_menu_ms"), 1500).toLongLong();
 	v.timing.doubleTapMs = s.value(QStringLiteral("double_tap_ms"), 300).toLongLong();
 	v.timing.forgivenessMs = s.value(QStringLiteral("volume_forgiveness_ms"), 150).toLongLong();
 	s.endGroup();

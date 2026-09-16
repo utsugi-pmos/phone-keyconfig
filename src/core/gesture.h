@@ -56,7 +56,7 @@ struct Action {
 };
 
 struct Config {
-	Ms holdMenuMs = 3000;
+	Ms holdMenuMs = 1500;
 	Ms doubleTapMs = 300;
 	Ms forgivenessMs = 150;
 };

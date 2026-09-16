@@ -60,7 +60,7 @@ void KeyconfigBackend::restoreDefaults()
 	setBinding(QStringLiteral("power_volume_up"), QStringLiteral("brightness-up"));
 	setBinding(QStringLiteral("power_volume_down"), QStringLiteral("screenshot"));
 	setBinding(QStringLiteral("double_tap"), QStringLiteral("torch-toggle"));
-	setHoldMenuMs(3000);
+	setHoldMenuMs(1500);
 	setDoubleTapMs(300);
 	setForgivenessMs(150);
 	setBrightnessStepPercent(10);

@@ -10,9 +10,9 @@ where it is pulled by `utsugi-surya-base`.
 | Gesture | Default action |
 |---|---|
 | Power: short press, released, nothing else pressed meanwhile | screen off / on |
-| Power held for 3 s | the power menu |
-| Power held (< 3 s) **+ volume-up** | brightness up |
-| Power held (< 3 s) **+ volume-down** | screenshot (via [screenglaze](https://github.com/utsugi-pmos/screenglaze)) |
+| Power held for 1.5 s | the power menu |
+| Power held (< 1.5 s) **+ volume-up** | brightness up |
+| Power held (< 1.5 s) **+ volume-down** | screenshot (via [screenglaze](https://github.com/utsugi-pmos/screenglaze)) |
 | Power pressed twice within 300 ms | flashlight on / off |
 
 Every gesture, and every button of the power menu, runs an **action**. An action
@@ -28,7 +28,7 @@ gesture and a menu button alike. All timings are adjustable.
   the volume-down + power screenshot reliable regardless of order.
 - The screen toggle fires 300 ms **after** release, not on it -- that window is
   what makes the double tap detectable. It is the one cost of the design.
-- Releasing power after the 3 s menu has come does nothing; the press was spent.
+- Releasing power after the 1.5 s menu has come does nothing; the press was spent.
 - A volume press while power is held spends the press: no toggle, no menu, and it
   never reaches the system. Each further volume press during the same hold fires
   its action again (hold power, tap volume-up three times = three brightness

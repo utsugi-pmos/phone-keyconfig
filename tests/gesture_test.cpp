@@ -141,7 +141,7 @@ void nextDeadlineTracksTheWindow()
 	Sim s;
 	CHECK(s.g.nextDeadline() == -1);
 	s.powerPress();
-	CHECK(s.g.nextDeadline() == s.now + 3000);      // the menu
+	CHECK(s.g.nextDeadline() == s.now + 1500);      // the menu
 	s.advance(50);
 	s.powerRelease();
 	CHECK(s.g.nextDeadline() == s.now + 300);       // the double-tap window
@@ -156,11 +156,11 @@ void holdBringsMenuAndReleaseIsSilent()
 	Sim s;
 	s.powerPress();
 	const Ms pressed = s.now;
-	s.advance(2999);
+	s.advance(1499);
 	CHECK(s.count(Action::PowerMenu) == 0);
 	s.advance(1);
 	CHECK(s.count(Action::PowerMenu) == 1);
-	CHECK(s.timeOf(Action::PowerMenu) == pressed + 3000);
+	CHECK(s.timeOf(Action::PowerMenu) == pressed + 1500);
 	s.advance(2000);                                // keep holding
 	CHECK(s.count(Action::PowerMenu) == 1);         // only once
 	s.powerRelease();
@@ -173,7 +173,7 @@ void releaseExactlyAtThresholdIsMenuNotToggle()
 {
 	Sim s;
 	s.powerPress();
-	s.advance(3000);                                // tick at exactly +3000 fires the menu
+	s.advance(1500);                                // tick at exactly +1500 fires the menu
 	s.powerRelease();
 	s.advance(1000);
 	CHECK(s.count(Action::PowerMenu) == 1);
