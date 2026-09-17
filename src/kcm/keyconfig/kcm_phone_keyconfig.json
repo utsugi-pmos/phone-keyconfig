@@ -7,7 +7,7 @@
             "handset",
             "tablet"
         ],
-        "Icon": "input-keyboard-symbolic",
+        "Icon": "smartphone-symbolic",
         "License": "GPL-2.0-or-later",
         "Name": "Phone buttons",
         "Name[es]": "Botones del teléfono",
