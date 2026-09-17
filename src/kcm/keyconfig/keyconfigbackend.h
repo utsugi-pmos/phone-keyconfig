@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 //
-// Backend for the "Phone keys" KCM. There is no Apply button -- this is a phone
+// Backend for the "Phone buttons" KCM. There is no Apply button -- this is a phone
 // -- so every setter writes the config file at once; the daemon watches it and
 // applies the change live. The library exposes its actions to the shared
 // ActionPicker.

@@ -9,7 +9,7 @@
         ],
         "Icon": "input-keyboard-symbolic",
         "License": "GPL-2.0-or-later",
-        "Name": "Phone keys",
+        "Name": "Phone buttons",
         "Name[es]": "Botones del teléfono",
         "Website": "https://github.com/utsugi-pmos/phone-keyconfig"
     },

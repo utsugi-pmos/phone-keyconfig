@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 //
-// The "Phone keys" KCM. FormCard sections make the groups and the tappable rows
+// The "Phone buttons" KCM. FormCard sections make the groups and the tappable rows
 // obvious; there is no Apply button -- every change is saved at once.
 import QtQuick
 import QtQuick.Controls as Controls
